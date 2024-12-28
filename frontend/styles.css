@@ -491,19 +491,18 @@ textarea#userInput {
 
 /* Page Transitions */
 .page {
-  opacity: 0;
-  visibility: hidden;
-  position: fixed;
-  top: 0;
-  left: 0;
+  display: none;
   width: 100%;
-  height: 100%;
-  transition: opacity 0.5s ease, visibility 0.5s;
+  min-height: 100vh;
 }
 
 .page.active {
-  opacity: 1;
-  visibility: visible;
+  display: block;
+}
+
+#chat-page {
+  position: relative;
+  z-index: 2;
 }
 
 /* Intro page styles */

@@ -1,17 +1,51 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const landingPage = document.getElementById("landing-page");
-  const chatContainer = document.getElementById("chat-container");
-  const chatHistory = document.getElementById("chatHistory");
+  console.log("DOM Content Loaded - Start");
+
+  // Get all DOM elements
+  const introPage = document.getElementById("intro-page");
+  const chatPage = document.getElementById("chat-page");
+  const startButton = document.getElementById("startButton");
   const userInput = document.getElementById("userInput");
   const sendButton = document.getElementById("sendButton");
-  const startButton = document.getElementById("startButton");
+  const chatHistory = document.getElementById("chatHistory");
+  const floatingContainer = document.querySelector(".floating-characters");
 
-  // Add console.log to debug
-  console.log("Start button:", startButton);
+  // Debug log
+  console.log("Elements found:", {
+    introPage: !!introPage,
+    chatPage: !!chatPage,
+    startButton: !!startButton,
+    userInput: !!userInput,
+    sendButton: !!sendButton,
+    chatHistory: !!chatHistory,
+  });
 
-  const BACKEND_URL = "http://localhost:3000"; // Change this to your backend URL
+  // Start button handler
+  if (startButton) {
+    startButton.addEventListener("click", () => {
+      console.log("Start button clicked");
+      if (introPage && chatPage) {
+        introPage.classList.remove("active");
+        chatPage.classList.add("active");
+        if (userInput) userInput.focus();
+      }
+    });
+  }
 
-  // List of Chinese characters for random selection
+  // Chat handlers
+  if (sendButton) {
+    sendButton.addEventListener("click", handleSubmit);
+  }
+
+  if (userInput) {
+    userInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        handleSubmit(e);
+      }
+    });
+  }
+
+  // Floating characters functionality
   const characters = [
     "风",
     "云",
@@ -115,27 +149,16 @@ document.addEventListener("DOMContentLoaded", () => {
     "乐",
   ];
 
-  const floatingContainer = document.querySelector(".floating-characters");
-
-  // Function to create a single floating character
   function createFloatingChar() {
     const span = document.createElement("span");
     span.textContent =
       characters[Math.floor(Math.random() * characters.length)];
-
-    // Set random horizontal position
     span.style.left = `${Math.random() * 100}%`;
-
-    // Set animation duration and other properties
     span.style.animationDuration = `${15 + Math.random() * 10}s`;
     span.style.fontSize = `${20 + Math.random() * 8}px`;
 
     floatingContainer.appendChild(span);
-
-    // Remove the element after animation completes
-    span.addEventListener("animationend", () => {
-      span.remove();
-    });
+    span.addEventListener("animationend", () => span.remove());
   }
 
   // Create initial batch of characters
@@ -146,148 +169,95 @@ document.addEventListener("DOMContentLoaded", () => {
   // Continuously create new characters
   setInterval(() => {
     if (floatingContainer.childNodes.length < 200) {
-      // Limit maximum characters
       createFloatingChar();
     }
-  }, 200); // Create new character every 200ms
-
-  // Page transition
-  const introPage = document.getElementById("intro-page");
-  const chatPage = document.getElementById("chat-page");
-
-  startButton.addEventListener("click", () => {
-    introPage.classList.remove("active");
-    chatPage.classList.add("active");
-  });
-
-  function createGeneratingIndicator() {
-    const generating = document.createElement("div");
-    generating.className = "generating";
-    generating.innerHTML = `
-            <span></span>
-            <span></span>
-            <span></span>
-        `;
-    return generating;
-  }
-
-  let messageCounter = 0;
-
-  function appendMessage({ message, type, isLoading }) {
-    const messagesDiv = document.getElementById("chat-messages");
-    const messageDiv = document.createElement("div");
-    const messageId = `message-${messageCounter++}`;
-
-    messageDiv.id = messageId;
-    messageDiv.className = `message ${type}-message`;
-    messageDiv.textContent = message;
-
-    if (isLoading) {
-      messageDiv.classList.add("loading");
-    }
-
-    messagesDiv.appendChild(messageDiv);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-    return messageId;
-  }
-
-  // Modified handleSubmit to not expect an event parameter
-  async function handleSubmit() {
-    const inputElement = document.getElementById("user-input");
-    if (!inputElement) {
-      console.error("Input element not found");
-      return;
-    }
-
-    const userInput = inputElement.value.trim();
-    if (!userInput) {
-      console.error("No input provided");
-      return;
-    }
-
-    console.log("Sending message:", userInput);
-
-    // Clear input
-    inputElement.value = "";
-
-    // Append user message
-    appendMessage({
-      message: userInput,
-      type: "user",
-      isLoading: false,
-    });
-
-    // Add loading message
-    const loadingMessageId = appendMessage({
-      message: "正在思考...",
-      type: "bot",
-      isLoading: true,
-    });
-
-    try {
-      console.log("Making fetch request...");
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ message: userInput }),
-      });
-
-      console.log("Response status:", response.status);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("Response received:", data);
-
-      // Update loading message with response
-      const messageElement = document.getElementById(loadingMessageId);
-      if (messageElement) {
-        messageElement.textContent = data.message;
-        messageElement.classList.remove("loading");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      const messageElement = document.getElementById(loadingMessageId);
-      if (messageElement) {
-        messageElement.textContent = "Error: Could not get response";
-        messageElement.classList.remove("loading");
-      }
-    }
-  }
-
-  // Modified event listeners
-  document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("chat-form");
-    const input = document.getElementById("user-input");
-    const sendButton = document.getElementById("send-button");
-
-    if (form) {
-      form.addEventListener("submit", (e) => {
-        e.preventDefault(); // Prevent form submission
-        handleSubmit();
-      });
-    }
-
-    if (sendButton) {
-      sendButton.addEventListener("click", (e) => {
-        e.preventDefault(); // Prevent button default action
-        handleSubmit();
-      });
-    }
-
-    if (input) {
-      input.addEventListener("keypress", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault(); // Prevent default Enter behavior
-          handleSubmit();
-        }
-      });
-    }
-  });
+  }, 200);
 });
+
+let messageCounter = 0;
+
+function appendMessage({ message, type, isLoading }) {
+  console.log("Appending message:", { message, type, isLoading });
+  const messagesDiv = document.getElementById("chatHistory");
+  if (!messagesDiv) {
+    console.error("chatHistory div not found");
+    return;
+  }
+
+  const messageDiv = document.createElement("div");
+  const messageId = `message-${messageCounter++}`;
+
+  messageDiv.id = messageId;
+  messageDiv.className = `message ${type}-message`;
+  messageDiv.textContent = message;
+
+  if (isLoading) {
+    messageDiv.classList.add("loading");
+  }
+
+  messagesDiv.appendChild(messageDiv);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+  return messageId;
+}
+
+async function handleSubmit(event) {
+  if (event) {
+    event.preventDefault();
+  }
+
+  const inputElement = document.getElementById("userInput");
+  if (!inputElement) return;
+
+  const userInput = inputElement.value.trim();
+  if (!userInput) return;
+
+  // Clear input
+  inputElement.value = "";
+
+  // Append user message
+  appendMessage({
+    message: userInput,
+    type: "user",
+    isLoading: false,
+  });
+
+  // Add loading message
+  const loadingMessageId = appendMessage({
+    message: "正在思考...",
+    type: "bot",
+    isLoading: true,
+  });
+
+  try {
+    const response = await fetch("http://localhost:3001/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ message: userInput }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Response received:", data);
+
+    // Update loading message with response
+    const messageElement = document.getElementById(loadingMessageId);
+    if (messageElement) {
+      messageElement.textContent = data.message;
+      messageElement.classList.remove("loading");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    const messageElement = document.getElementById(loadingMessageId);
+    if (messageElement) {
+      messageElement.textContent = "Error: Could not get response";
+      messageElement.classList.remove("loading");
+    }
+  }
+}
