@@ -171,41 +171,42 @@ document.addEventListener("DOMContentLoaded", () => {
     return generating;
   }
 
-  function appendMessage(message, type, isLoading = false) {
+  let messageCounter = 0;
+
+  function appendMessage({ message, type, isLoading }) {
+    const messagesDiv = document.getElementById("chat-messages");
     const messageDiv = document.createElement("div");
-    messageDiv.className = `message ${type}-message${
-      isLoading ? " loading" : ""
-    }`;
+    const messageId = `message-${messageCounter++}`;
+
+    messageDiv.id = messageId;
+    messageDiv.className = `message ${type}-message`;
     messageDiv.textContent = message;
 
-    // Debug log
-    console.log("Appending message:", { message, type, isLoading });
-
-    // Make sure chatHistory exists
-    if (!chatHistory) {
-      console.error("Chat history element not found!");
-      return messageDiv;
+    if (isLoading) {
+      messageDiv.classList.add("loading");
     }
 
-    chatHistory.appendChild(messageDiv);
-    chatHistory.scrollTop = chatHistory.scrollHeight;
-    return messageDiv;
+    messagesDiv.appendChild(messageDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+    return messageId;
   }
 
-  function updateMessage(messageId, content, isLoading) {
-    const messageElement = document.getElementById(messageId);
-    if (messageElement) {
-      messageElement.textContent = content;
-      messageElement.classList.toggle("loading", isLoading);
-    }
-  }
-
+  // Modified handleSubmit to not expect an event parameter
   async function handleSubmit() {
     const inputElement = document.getElementById("user-input");
-    if (!inputElement) return;
+    if (!inputElement) {
+      console.error("Input element not found");
+      return;
+    }
 
-    const userInput = inputElement.value;
-    if (!userInput.trim()) return;
+    const userInput = inputElement.value.trim();
+    if (!userInput) {
+      console.error("No input provided");
+      return;
+    }
+
+    console.log("Sending message:", userInput);
 
     // Clear input
     inputElement.value = "";
@@ -217,16 +218,16 @@ document.addEventListener("DOMContentLoaded", () => {
       isLoading: false,
     });
 
-    // Add loading message and get its ID
-    const loadingMessage = {
+    // Add loading message
+    const loadingMessageId = appendMessage({
       message: "正在思考...",
       type: "bot",
       isLoading: true,
-    };
-    const loadingMessageId = appendMessage(loadingMessage);
+    });
 
     try {
-      const response = await fetch("http://174.138.119.118/api/chat", {
+      console.log("Making fetch request...");
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -235,6 +236,8 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ message: userInput }),
       });
 
+      console.log("Response status:", response.status);
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -242,20 +245,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
       console.log("Response received:", data);
 
-      // Update the loading message with the actual response
-      const messageElement = document.querySelector(
-        `[data-message-id="${loadingMessageId}"]`
-      );
+      // Update loading message with response
+      const messageElement = document.getElementById(loadingMessageId);
       if (messageElement) {
         messageElement.textContent = data.message;
         messageElement.classList.remove("loading");
       }
     } catch (error) {
       console.error("Error:", error);
-      // Handle the error appropriately
-      const messageElement = document.querySelector(
-        `[data-message-id="${loadingMessageId}"]`
-      );
+      const messageElement = document.getElementById(loadingMessageId);
       if (messageElement) {
         messageElement.textContent = "Error: Could not get response";
         messageElement.classList.remove("loading");
@@ -263,11 +261,33 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  sendButton.addEventListener("click", handleSubmit);
-  userInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
+  // Modified event listeners
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("chat-form");
+    const input = document.getElementById("user-input");
+    const sendButton = document.getElementById("send-button");
+
+    if (form) {
+      form.addEventListener("submit", (e) => {
+        e.preventDefault(); // Prevent form submission
+        handleSubmit();
+      });
+    }
+
+    if (sendButton) {
+      sendButton.addEventListener("click", (e) => {
+        e.preventDefault(); // Prevent button default action
+        handleSubmit();
+      });
+    }
+
+    if (input) {
+      input.addEventListener("keypress", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault(); // Prevent default Enter behavior
+          handleSubmit();
+        }
+      });
     }
   });
 });
