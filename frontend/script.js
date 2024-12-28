@@ -192,18 +192,36 @@ document.addEventListener("DOMContentLoaded", () => {
     return messageDiv;
   }
 
+  function updateMessage(messageId, content, isLoading) {
+    const messageElement = document.getElementById(messageId);
+    if (messageElement) {
+      messageElement.textContent = content;
+      messageElement.classList.toggle("loading", isLoading);
+    }
+  }
+
   async function handleSubmit(event) {
-    if (event) event.preventDefault();
-    const message = userInput.value.trim();
-    if (!message) return;
+    event.preventDefault();
+    const userInput = document.getElementById("user-input").value;
+    if (!userInput.trim()) return;
 
-    // Debug log
-    console.log("Sending message:", message);
+    // Clear input
+    document.getElementById("user-input").value = "";
 
-    appendMessage(message, "user");
-    userInput.value = "";
+    // Append user message
+    appendMessage({
+      message: userInput,
+      type: "user",
+      isLoading: false,
+    });
 
-    const loadingDiv = appendMessage("正在思考...", "bot", true);
+    // Add loading message and get its ID
+    const loadingMessage = {
+      message: "正在思考...",
+      type: "bot",
+      isLoading: true,
+    };
+    const loadingMessageId = appendMessage(loadingMessage);
 
     try {
       const response = await fetch("http://174.138.119.118/api/chat", {
@@ -212,7 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ message: message }),
+        body: JSON.stringify({ message: userInput }),
       });
 
       if (!response.ok) {
@@ -223,11 +241,23 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Response received:", data);
 
       // Update the loading message with the actual response
-      updateMessage(loadingDiv, data.message, false);
+      const messageElement = document.querySelector(
+        `[data-message-id="${loadingMessageId}"]`
+      );
+      if (messageElement) {
+        messageElement.textContent = data.message;
+        messageElement.classList.remove("loading");
+      }
     } catch (error) {
       console.error("Error:", error);
       // Handle the error appropriately
-      updateMessage(loadingDiv, "Error: Could not get response", false);
+      const messageElement = document.querySelector(
+        `[data-message-id="${loadingMessageId}"]`
+      );
+      if (messageElement) {
+        messageElement.textContent = "Error: Could not get response";
+        messageElement.classList.remove("loading");
+      }
     }
   }
 
