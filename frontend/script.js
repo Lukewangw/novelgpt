@@ -215,21 +215,19 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ message: message }),
       });
 
-      const data = await response.json();
-      console.log("Response:", data);
-
-      if (data.error) {
-        loadingDiv.textContent = data.error;
-        loadingDiv.classList.add("error");
-      } else {
-        loadingDiv.textContent = data.message;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      loadingDiv.classList.remove("loading");
+
+      const data = await response.json();
+      console.log("Response received:", data);
+
+      // Update the loading message with the actual response
+      updateMessage(loadingDiv, data.message, false);
     } catch (error) {
       console.error("Error:", error);
-      loadingDiv.textContent = "抱歉，发生错误。请重试。";
-      loadingDiv.classList.add("error");
-      loadingDiv.classList.remove("loading");
+      // Handle the error appropriately
+      updateMessage(loadingDiv, "Error: Could not get response", false);
     }
   }
 
