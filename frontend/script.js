@@ -200,13 +200,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  async function handleSubmit(event) {
-    event.preventDefault();
-    const userInput = document.getElementById("user-input").value;
+  async function handleSubmit() {
+    const inputElement = document.getElementById("user-input");
+    if (!inputElement) return;
+
+    const userInput = inputElement.value;
     if (!userInput.trim()) return;
 
     // Clear input
-    document.getElementById("user-input").value = "";
+    inputElement.value = "";
 
     // Append user message
     appendMessage({
