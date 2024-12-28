@@ -1,0 +1,17 @@
+{
+  "name": "novelgpt-frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "script.js",
+  "scripts": {
+    "start": "serve .",
+    "dev": "serve .",
+    "build": "mkdir -p dist && cp -r index.html styles.css script.js dist/"
+  },
+  "dependencies": {
+    "serve": "^14.0.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
