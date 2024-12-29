@@ -28,24 +28,18 @@ app.post("/api/chat", async (req, res) => {
     try {
       console.log("2. Calling OpenAI API with gpt-4o-mini model");
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-4o-minift:gpt-4o-mini-2024-07-18:personal::AjhLWTdD",
         messages: [
           {
             role: "system",
-            content: `你是一个专业的小说创作助手。请注意：
-            1. 使用简洁易读的格式输出
-            2. 避免使用 ### 或 #### 等标记
-            3. 使用空行分隔段落
-            4. 使用"第X章"作为章节标题
-            5. 保持自然的叙事流程
-            6. 确保对话使用引号并另起一行`,
+            content: `你是一个专业的小说创作助手.请注意: 1. 使用简洁易读的格式输出 2. 避免使用 ### 或 #### 等标记 3. 使用空行分隔段落 4. 使用' 第X章 '作为章 节标题 5. 保持自然的叙事流程 6. 确保对话使用引号并另起一行 7. 请给出用户要求字数的3倍以上字数并确定满足字数要求 8. 保持人物名称的准确性以及持续性`,
           },
           {
             role: "user",
             content: req.body.message,
           },
         ],
-        max_tokens: 1000,
+        max_tokens: 20000,
         temperature: 0.7,
       });
 
