@@ -28,7 +28,7 @@ app.post("/api/chat", async (req, res) => {
     try {
       console.log("2. Calling OpenAI API with gpt-4o-mini model");
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "ft:gpt-4o-2024-08-06:personal::Aji9hdGY",
         messages: [
           {
             role: "system",
@@ -39,7 +39,7 @@ app.post("/api/chat", async (req, res) => {
             content: req.body.message,
           },
         ],
-        max_tokens: 10000,
+        max_tokens: 5000,
         temperature: 0.7,
       });
 
